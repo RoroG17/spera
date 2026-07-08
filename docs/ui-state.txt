@@ -1,0 +1,55 @@
+# UI State
+
+Login :
+
+- Connexion
+- Loading
+- Inscription
+- Loading
+- Error sign in
+- Forgot password
+- Code Check
+- update password
+- Loading reset password
+- Error reset password
+
+Actualité :
+
+- Success
+- Loading
+- Error
+
+Recherche User :
+
+- Success
+- Loading
+- Error
+
+Recette :
+
+- Success
+- Loading
+- Error
+- Creation
+- Update
+
+Recherche Recette :
+
+- Success
+- Loading
+- Error
+
+Entrainement :
+
+- Success
+- Loading
+- Error
+- Creation
+- In Training
+- End Training
+
+User :
+
+- Success
+- Loading
+- Error

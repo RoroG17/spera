@@ -1,5 +1,6 @@
 package com.example.spera
 
+import MyAppTheme
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,7 +23,7 @@ import spera.shared.generated.resources.compose_multiplatform
 @Composable
 @Preview
 fun App() {
-    MaterialTheme {
+    MyAppTheme {
         var showContent by remember { mutableStateOf(false) }
         Column(
             modifier = Modifier

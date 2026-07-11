@@ -1,50 +1,29 @@
 package com.example.spera
 
 import MyAppTheme
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.Preview
-import org.jetbrains.compose.resources.painterResource
-
-import spera.shared.generated.resources.Res
-import spera.shared.generated.resources.compose_multiplatform
+import com.example.spera.data.auth.AuthProvider
+import com.example.spera.ui.screens.home.HomeScreen
+import com.example.spera.ui.screens.login.LoginScreen
 
 @Composable
 @Preview
 fun App() {
     MyAppTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
-            }
+        // Le maintien de session pilote la navigation (US2).
+        val currentUser by AuthProvider.sessionManager.currentUser.collectAsState()
+
+        val user = currentUser
+        if (user == null) {
+            LoginScreen()
+        } else {
+            HomeScreen(
+                user = user,
+                onLogout = { AuthProvider.sessionManager.clear() },
+            )
         }
     }
 }

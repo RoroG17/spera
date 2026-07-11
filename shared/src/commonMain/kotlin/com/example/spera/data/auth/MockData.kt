@@ -25,9 +25,12 @@ object MockData {
         mail = "test@elan.fr",
         height = 168,
         weight = 60,
-        activity = Activity(sport = "Course à pied", quantity = 3, objective = "10 km"),
+        activities = listOf(Activity(sport = "Course à pied", quantity = 3, objective = "10 km")),
         followers = emptyList(),
         following = emptyList(),
+        favoriteRecipes = emptyList(),
+        recipes = emptyList(),
+        trainings = emptyList(),
     )
 
     private val secondUser = User(
@@ -38,9 +41,15 @@ object MockData {
         mail = "tom@elan.fr",
         height = 180,
         weight = 78,
-        activity = Activity(sport = "Musculation", quantity = 4, objective = "Prise de masse"),
+        activities = listOf(
+            Activity(sport = "Musculation", quantity = 4, objective = "Prise de masse"),
+            Activity(sport = "Vélo", quantity = 2, objective = null),
+        ),
         followers = emptyList(),
         following = emptyList(),
+        favoriteRecipes = emptyList(),
+        recipes = emptyList(),
+        trainings = emptyList(),
     )
 
     val accounts: List<MockAccount> = listOf(

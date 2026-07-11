@@ -2,7 +2,9 @@ package com.example.spera.ui.screens.login
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -44,6 +46,8 @@ private val TextMuted = Color(0xFF9A93A8)
 
 @Composable
 fun LoginScreen(
+    onNavigateToSignUp: () -> Unit = {},
+    onNavigateBack: () -> Unit = {},
     viewModel: LoginVM = viewModel { LoginVM() },
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -55,10 +59,10 @@ fun LoginScreen(
 
     var passwordVisible by remember { mutableStateOf(false) }
 
+    Box(modifier = Modifier.fillMaxSize().background(Background)) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Background)
             .padding(horizontal = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -172,6 +176,28 @@ fun LoginScreen(
             Text("Compte de démo", color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
             Text("test@elan.fr", color = TextMuted, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
             Text("password123", color = TextMuted, fontSize = 13.sp)
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("Pas encore de compte ?", color = TextMuted, fontSize = 14.sp)
+            TextButton(onClick = onNavigateToSignUp, enabled = !isLoading) {
+                Text("Créer un compte", color = Primary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
+    }
+
+        TextButton(
+            onClick = onNavigateBack,
+            enabled = !isLoading,
+            modifier = Modifier.align(Alignment.TopStart).padding(top = 24.dp, start = 12.dp),
+        ) {
+            Text("‹ Retour", color = TextMuted, fontSize = 15.sp)
         }
     }
 }

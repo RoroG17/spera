@@ -8,8 +8,11 @@ data class User (
     val mail: String,
     val height: Int,
     val weight: Int,
-    val activity: Activity,
+    val activities: List<Activity>,
     val followers: List<User>,
-    val following: List<User>
+    val following: List<User>,
+    val favoriteRecipes: List<Recipe>,
+    val recipes: List<Recipe>,
+    val trainings: List<Training>,
 ) {
 }

@@ -66,7 +66,7 @@ private val Border = Color(0xFF302B3A)
 
 /**
  * Flux timer effort/repos (US14, maquette 13) en plein écran, même patron
- * que `NewPostScreen` : configuration de la séance (un ou plusieurs
+ * que `NewRecipeScreen` : configuration de la séance (un ou plusieurs
  * exercices, sliders + saisie manuelle), décompte avec pause, puis résumé
  * avec enregistrement au calendrier.
  */
@@ -86,7 +86,7 @@ fun TimerScreen(
         }
     }
 
-    // Quitter le flux remet le VM à zéro (il survit à l'écran, cf. NewPostVM).
+    // Quitter le flux remet le VM à zéro (il survit à l'écran, cf. NewRecipeVM).
     val exit = {
         viewModel.reset()
         onBack()
@@ -585,7 +585,7 @@ private fun EndTrainingContent(
 
 // ----- Communs ------------------------------------------------------------
 
-/** Header plein écran : retour + titre (patron `NewPostScreen`). */
+/** Header plein écran : retour + titre (patron `NewRecipeScreen`). */
 @Composable
 private fun FlowHeader(title: String, onBack: () -> Unit) {
     Row(

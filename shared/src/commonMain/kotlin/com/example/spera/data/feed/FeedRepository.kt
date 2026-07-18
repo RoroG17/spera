@@ -11,13 +11,14 @@ sealed interface FeedResult {
     data class Error(val message: String) : FeedResult
 }
 
-/** Type de publication choisi sur l'écran « Nouvelle publication » (US6). */
-enum class PostType { Training, Recipe }
+/** Résultat métier du partage d'un post existant sur le fil. */
+sealed interface ShareResult {
+    data object Success : ShareResult
 
-/** Résultat métier de la création d'un post (US6). */
-sealed interface CreatePostResult {
-    data class Success(val post: FeedItem) : CreatePostResult
-    data class Error(val message: String) : CreatePostResult
+    /** Le post est déjà sur le fil — pas de doublon créé. */
+    data object AlreadyShared : ShareResult
+
+    data class Error(val message: String) : ShareResult
 }
 
 interface FeedRepository {
@@ -31,15 +32,10 @@ interface FeedRepository {
     suspend fun loadFeed(user: User, page: Int, pageSize: Int): FeedResult
 
     /**
-     * Publie un nouveau post ([Recipe] ou [Training] selon [type]) daté du jour,
-     * au nom de [author]. Quand Supabase sera branché : insertion dans la table
-     * `recette` ou `entrainement` (RLS : auteur = utilisateur authentifié).
+     * Partage une recette ou une séance existante sur le fil. Le fil ne crée
+     * pas de contenu : il référence les entités des pages Recettes et
+     * Entraînement (cf. [FeedItem]). Quand Supabase sera branché : flag de
+     * visibilité sur la table `recette` / `entrainement`.
      */
-    suspend fun createPost(
-        author: User,
-        type: PostType,
-        name: String,
-        description: String,
-        photo: String,
-    ): CreatePostResult
+    suspend fun share(post: FeedItem): ShareResult
 }

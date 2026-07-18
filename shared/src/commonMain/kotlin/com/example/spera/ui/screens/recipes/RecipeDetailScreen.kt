@@ -19,6 +19,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -26,7 +29,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.spera.data.feed.FeedItem
 import com.example.spera.models.Recipe
+import com.example.spera.ui.screens.common.ShareButton
+import com.example.spera.viewmodels.ShareVM
+import com.example.spera.viewmodels.states.ShareUiState
 
 // Palette auth de référence (CLAUDE.md)
 private val Background = Color(0xFF0F0D14)
@@ -40,13 +48,29 @@ private val TextMuted = Color(0xFF9A93A8)
  * Détail d'une recette (US9, maquette 9) : photo, temps, description,
  * ingrédients. Le bloc « Adapter avec l'IA » est affiché mais inactif (US11) ;
  * le marqueur favori est décoratif (toggle en US8).
+ *
+ * [canShare] : affiche « Partager sur le fil » (recettes de l'utilisateur) ;
+ * [onShared] est appelé après un partage réussi (rechargement du fil).
  */
 @Composable
 fun RecipeDetailScreen(
     recipe: Recipe,
     isFavorite: Boolean,
     onBack: () -> Unit = {},
+    canShare: Boolean = false,
+    onShared: () -> Unit = {},
+    shareVM: ShareVM = viewModel(key = "recipe-share") { ShareVM() },
 ) {
+    val shareState by shareVM.uiState.collectAsState()
+
+    // Le VM survit à l'écran : on oublie l'état du post précédent à l'ouverture.
+    LaunchedEffect(recipe.id) { shareVM.reset() }
+    LaunchedEffect(shareState) {
+        if ((shareState as? ShareUiState.Shared)?.postId == FeedItem.RecipePost(recipe).id) {
+            onShared()
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -146,6 +170,16 @@ fun RecipeDetailScreen(
                     color = TextMuted,
                     fontSize = 13.sp,
                     modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+
+            if (canShare) {
+                val post = FeedItem.RecipePost(recipe)
+                ShareButton(
+                    state = shareState,
+                    shared = (shareState as? ShareUiState.Shared)?.postId == post.id,
+                    onClick = { shareVM.share(post) },
+                    modifier = Modifier.padding(top = 14.dp),
                 )
             }
 

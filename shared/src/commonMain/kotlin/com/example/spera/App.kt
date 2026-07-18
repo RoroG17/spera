@@ -9,7 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.spera.data.auth.AuthProvider
-import com.example.spera.ui.screens.home.HomeScreen
+import com.example.spera.ui.navigation.MainScaffold
 import com.example.spera.ui.screens.login.LoginScreen
 import com.example.spera.ui.screens.signup.SignUpScreen
 import com.example.spera.ui.screens.welcome.WelcomeScreen
@@ -25,7 +25,8 @@ fun App() {
 
         val user = currentUser
         if (user != null) {
-            HomeScreen(
+            // Coque authentifiée : header + footer communs à toutes les sections.
+            MainScaffold(
                 user = user,
                 onLogout = { AuthProvider.sessionManager.clear() },
             )

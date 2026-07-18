@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.example.spera.models.Recipe
 import com.example.spera.models.User
 import com.example.spera.ui.screens.home.HomeScreen
+import com.example.spera.ui.screens.newpost.NewPostScreen
 import com.example.spera.ui.screens.profile.ProfileScreen
 import com.example.spera.ui.screens.recipes.RecipeDetailScreen
 import com.example.spera.ui.screens.recipes.RecipesScreen
@@ -62,16 +63,19 @@ fun MainScaffold(
     var tabIndex by rememberSaveable { mutableStateOf(0) }
     val tab = MainTab.entries[tabIndex]
 
-    // US9 — détail d'une recette en plein écran (sans header/footer), comme le
-    // suggère la flèche retour de la maquette 9. (recette, est favorite)
-    var openedRecipe by remember { mutableStateOf<Pair<Recipe, Boolean>?>(null) }
+    // US6 — écran « Nouvelle publication » en plein écran (sans header/footer),
+    // comme le suggère la flèche retour de la maquette 6.
+    var showNewPost by rememberSaveable { mutableStateOf(false) }
+    // Incrémenté à chaque publication pour recharger le fil au retour.
+    var feedRefresh by rememberSaveable { mutableStateOf(0) }
 
-    val opened = openedRecipe
-    if (opened != null) {
-        RecipeDetailScreen(
-            recipe = opened.first,
-            isFavorite = opened.second,
-            onBack = { openedRecipe = null },
+    if (showNewPost) {
+        NewPostScreen(
+            onBack = { showNewPost = false },
+            onPublished = {
+                showNewPost = false
+                feedRefresh += 1
+            },
         )
         return
     }
@@ -85,10 +89,11 @@ fun MainScaffold(
 
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             when (tab) {
-                MainTab.Feed -> HomeScreen()
-                MainTab.Recipes -> RecipesScreen(
-                    onOpenRecipe = { recipe, isFavorite -> openedRecipe = recipe to isFavorite },
+                MainTab.Feed -> HomeScreen(
+                    refreshSignal = feedRefresh,
+                    onCreatePost = { showNewPost = true },
                 )
+                MainTab.Recipes -> RecipesScreen()
                 MainTab.Training -> TrainingScreen()
                 MainTab.Profile -> ProfileScreen(user = user, onLogout = onLogout)
             }

@@ -1,6 +1,7 @@
 package com.example.spera.ui.screens.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.spera.data.feed.FeedItem
+import kotlinx.coroutines.flow.first
 import com.example.spera.models.User
 import com.example.spera.viewmodels.HomeVM
 import com.example.spera.viewmodels.states.HomeUiState
@@ -49,13 +51,33 @@ private val TextMuted = Color(0xFF9A93A8)
  * Contenu de l'onglet « Fil d'actualité » (US4) : liste des posts (séances +
  * recettes) des abonnements, avec infinite scroll. Le header et le footer sont
  * fournis par `MainScaffold`.
+ *
+ * [refreshSignal] : recharge le fil quand la valeur change (retour de
+ * publication US6). [onCreatePost] : ouvre l'écran « Nouvelle publication ».
  */
 @Composable
 fun HomeScreen(
+    refreshSignal: Int = 0,
+    onCreatePost: () -> Unit = {},
     viewModel: HomeVM = viewModel { HomeVM() },
 ) {
     val state by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
+
+    // Retour de publication : recharge puis remonte en haut du fil. Le scroll
+    // doit attendre le Success du rechargement : la LazyColumn s'ancre sur la
+    // clé du premier item visible, un scroll anticipé serait annulé quand le
+    // nouveau post est inséré en tête.
+    LaunchedEffect(refreshSignal) {
+        if (refreshSignal > 0) {
+            viewModel.load()
+            // Observer le StateFlow du VM, pas le State Compose : load() l'a déjà
+            // passé en Loading de façon synchrone, on attend donc bien le Success
+            // du rechargement (et non l'ancien, encore affiché par la composition).
+            viewModel.uiState.first { it is HomeUiState.Success }
+            listState.scrollToItem(0)
+        }
+    }
 
     // Infinite scroll : déclenche la page suivante quand on approche du bas.
     val shouldLoadMore by remember {
@@ -126,6 +148,19 @@ fun HomeScreen(
                     }
                 }
             }
+        }
+
+        // US6 — nouvelle publication.
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(20.dp)
+                .size(56.dp)
+                .background(Primary, CircleShape)
+                .clickable(onClick = onCreatePost),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("+", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Bold)
         }
     }
 }

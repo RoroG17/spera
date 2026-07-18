@@ -29,7 +29,7 @@ private const val COUNTDOWN_SECONDS = 5
  * ViewModel du flux timer (US14) : configuration de la séance (Creation),
  * déroulé effort → repos → répétitions → exercice suivant (In Training),
  * puis résumé et enregistrement au calendrier (End Training). Référence de
- * patron : [NewPostVM] pour le flux plein écran, [TrainingsVM] pour la data.
+ * patron : [NewRecipeVM] pour le flux plein écran, [TrainingsVM] pour la data.
  */
 class TimerVM(
     private val trainingRepository: TrainingRepository = TrainingProvider.trainingRepository,

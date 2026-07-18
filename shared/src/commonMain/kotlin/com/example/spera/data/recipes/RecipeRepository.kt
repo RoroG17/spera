@@ -15,6 +15,12 @@ sealed interface RecipesResult {
     data class Error(val message: String) : RecipesResult
 }
 
+/** Résultat métier de la création d'une recette. */
+sealed interface CreateRecipeResult {
+    data class Success(val recipe: Recipe) : CreateRecipeResult
+    data class Error(val message: String) : CreateRecipeResult
+}
+
 interface RecipeRepository {
     /**
      * Renvoie les recettes visibles par [user] (les siennes + celles des autres
@@ -23,4 +29,10 @@ interface RecipeRepository {
      * ViewModel.
      */
     suspend fun loadRecipes(user: User): RecipesResult
+
+    /**
+     * Enregistre [recipe] dans les recettes de [user] (liste `recipes` de
+     * `data.txt`). Le partage éventuel sur le fil passe par `FeedRepository`.
+     */
+    suspend fun createRecipe(user: User, recipe: Recipe): CreateRecipeResult
 }

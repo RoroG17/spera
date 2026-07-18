@@ -1,7 +1,6 @@
 package com.example.spera.ui.screens.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,13 +51,12 @@ private val TextMuted = Color(0xFF9A93A8)
  * recettes) des abonnements, avec infinite scroll. Le header et le footer sont
  * fournis par `MainScaffold`.
  *
- * [refreshSignal] : recharge le fil quand la valeur change (retour de
- * publication US6). [onCreatePost] : ouvre l'écran « Nouvelle publication ».
+ * [refreshSignal] : recharge le fil quand la valeur change (partage d'une
+ * recette ou d'une séance depuis sa page).
  */
 @Composable
 fun HomeScreen(
     refreshSignal: Int = 0,
-    onCreatePost: () -> Unit = {},
     viewModel: HomeVM = viewModel { HomeVM() },
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -150,18 +148,6 @@ fun HomeScreen(
             }
         }
 
-        // US6 — nouvelle publication.
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(20.dp)
-                .size(56.dp)
-                .background(Primary, CircleShape)
-                .clickable(onClick = onCreatePost),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text("+", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Bold)
-        }
     }
 }
 

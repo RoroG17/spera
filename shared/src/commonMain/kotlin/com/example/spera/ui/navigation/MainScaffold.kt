@@ -30,8 +30,8 @@ import com.example.spera.models.Recipe
 import com.example.spera.models.Training
 import com.example.spera.models.User
 import com.example.spera.ui.screens.home.HomeScreen
-import com.example.spera.ui.screens.newpost.NewPostScreen
 import com.example.spera.ui.screens.profile.ProfileScreen
+import com.example.spera.ui.screens.recipes.NewRecipeScreen
 import com.example.spera.ui.screens.recipes.RecipeDetailScreen
 import com.example.spera.ui.screens.recipes.RecipesScreen
 import com.example.spera.ui.screens.training.TimerScreen
@@ -66,11 +66,12 @@ fun MainScaffold(
     var tabIndex by rememberSaveable { mutableStateOf(0) }
     val tab = MainTab.entries[tabIndex]
 
-    // US6 — écran « Nouvelle publication » en plein écran (sans header/footer),
-    // comme le suggère la flèche retour de la maquette 6.
-    var showNewPost by rememberSaveable { mutableStateOf(false) }
-    // Incrémenté à chaque publication pour recharger le fil au retour.
+    // Création de recette en plein écran, ouverte depuis l'onglet Recettes.
+    var showNewRecipe by rememberSaveable { mutableStateOf(false) }
+    // Incrémenté à chaque partage (recette/séance) pour recharger le fil.
     var feedRefresh by rememberSaveable { mutableStateOf(0) }
+    // Incrémenté à chaque recette créée pour recharger la liste des recettes.
+    var recipesRefresh by rememberSaveable { mutableStateOf(0) }
 
     // US14 — flux timer (création de séance) en plein écran.
     var showTimer by rememberSaveable { mutableStateOf(false) }
@@ -90,6 +91,8 @@ fun MainScaffold(
             recipe = opened.first,
             isFavorite = opened.second,
             onBack = { openedRecipe = null },
+            canShare = opened.first.users.id == user.id,
+            onShared = { feedRefresh += 1 },
         )
         return
     }
@@ -99,16 +102,18 @@ fun MainScaffold(
         TrainingDetailScreen(
             training = trainingDetail,
             onBack = { openedTraining = null },
+            onShared = { feedRefresh += 1 },
         )
         return
     }
 
-    if (showNewPost) {
-        NewPostScreen(
-            onBack = { showNewPost = false },
-            onPublished = {
-                showNewPost = false
-                feedRefresh += 1
+    if (showNewRecipe) {
+        NewRecipeScreen(
+            onBack = { showNewRecipe = false },
+            onCreated = { shared ->
+                showNewRecipe = false
+                recipesRefresh += 1
+                if (shared) feedRefresh += 1
             },
         )
         return
@@ -134,11 +139,10 @@ fun MainScaffold(
 
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             when (tab) {
-                MainTab.Feed -> HomeScreen(
-                    refreshSignal = feedRefresh,
-                    onCreatePost = { showNewPost = true },
-                )
+                MainTab.Feed -> HomeScreen(refreshSignal = feedRefresh)
                 MainTab.Recipes -> RecipesScreen(
+                    refreshSignal = recipesRefresh,
+                    onCreateRecipe = { showNewRecipe = true },
                     onOpenRecipe = { recipe, isFavorite -> openedRecipe = recipe to isFavorite },
                 )
                 MainTab.Training -> TrainingScreen(

@@ -2,6 +2,7 @@ package com.example.spera.ui.screens.recipes
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -19,6 +21,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -44,113 +47,140 @@ private val TextMuted = Color(0xFF9A93A8)
 
 /**
  * Onglet Recettes (US9, maquette 8) : recherche (visuelle — active en US10),
- * filtres Toutes / Mes recettes / Favoris, et grille des recettes. Le header
- * et le footer sont fournis par `MainScaffold`.
+ * filtres Toutes / Mes recettes / Favoris, grille des recettes et bouton « + »
+ * de création. Le header et le footer sont fournis par `MainScaffold`.
+ *
+ * [refreshSignal] : recharge la liste quand la valeur change (retour de
+ * création). [onCreateRecipe] : ouvre l'écran « Nouvelle recette ».
  */
 @Composable
 fun RecipesScreen(
+    refreshSignal: Int = 0,
+    onCreateRecipe: () -> Unit = {},
     onOpenRecipe: (recipe: Recipe, isFavorite: Boolean) -> Unit = { _, _ -> },
     viewModel: RecipesVM = viewModel { RecipesVM() },
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    Column(
+    LaunchedEffect(refreshSignal) {
+        if (refreshSignal > 0) viewModel.load()
+    }
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Background)
-            .padding(horizontal = 16.dp),
+            .background(Background),
     ) {
-        // Barre de recherche — visuelle uniquement (US10 : recherche de recettes).
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 14.dp)
-                .background(Surface, RoundedCornerShape(24.dp))
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
         ) {
-            Text("🔍", fontSize = 15.sp)
-            Text(
-                "Rechercher une recette…",
-                color = TextMuted,
-                fontSize = 15.sp,
-                modifier = Modifier.padding(start = 10.dp),
-            )
-        }
-
-        // Filtres fonctionnels (US9).
-        val currentFilter = (state as? RecipesUiState.Success)?.filter ?: RecipeFilter.All
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.padding(top = 14.dp),
-        ) {
-            RecipeFilter.entries.forEach { filter ->
-                FilterChip(
-                    label = filter.label,
-                    selected = filter == currentFilter,
-                    onClick = { viewModel.onFilterSelect(filter) },
+            // Barre de recherche — visuelle uniquement (US10 : recherche de recettes).
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 14.dp)
+                    .background(Surface, RoundedCornerShape(24.dp))
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+            ) {
+                Text("🔍", fontSize = 15.sp)
+                Text(
+                    "Rechercher une recette…",
+                    color = TextMuted,
+                    fontSize = 15.sp,
+                    modifier = Modifier.padding(start = 10.dp),
                 )
             }
-        }
 
-        // Filtres de recherche avancée — visuels uniquement (US10).
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.padding(top = 10.dp).alpha(0.55f),
-        ) {
-            listOf("Calories", "Protéines", "Type").forEach { label ->
-                FilterChip(label = label, selected = false, onClick = {})
-            }
-        }
-
-        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            when (val s = state) {
-                is RecipesUiState.Loading -> CenteredBox {
-                    CircularProgressIndicator(color = Primary)
+            // Filtres fonctionnels (US9).
+            val currentFilter = (state as? RecipesUiState.Success)?.filter ?: RecipeFilter.All
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.padding(top = 14.dp),
+            ) {
+                RecipeFilter.entries.forEach { filter ->
+                    FilterChip(
+                        label = filter.label,
+                        selected = filter == currentFilter,
+                        onClick = { viewModel.onFilterSelect(filter) },
+                    )
                 }
+            }
 
-                is RecipesUiState.Error -> CenteredBox {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(s.message, color = TextMuted, fontSize = 15.sp)
-                        TextButton(onClick = viewModel::load) {
-                            Text("Réessayer", color = Primary, fontWeight = FontWeight.SemiBold)
+            // Filtres de recherche avancée — visuels uniquement (US10).
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.padding(top = 10.dp).alpha(0.55f),
+            ) {
+                listOf("Calories", "Protéines", "Type").forEach { label ->
+                    FilterChip(label = label, selected = false, onClick = {})
+                }
+            }
+
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                when (val s = state) {
+                    is RecipesUiState.Loading -> CenteredBox {
+                        CircularProgressIndicator(color = Primary)
+                    }
+
+                    is RecipesUiState.Error -> CenteredBox {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(s.message, color = TextMuted, fontSize = 15.sp)
+                            TextButton(onClick = viewModel::load) {
+                                Text("Réessayer", color = Primary, fontWeight = FontWeight.SemiBold)
+                            }
                         }
                     }
-                }
 
-                is RecipesUiState.Success -> {
-                    if (s.recipes.isEmpty()) {
-                        CenteredBox {
-                            Text(
-                                when (s.filter) {
-                                    RecipeFilter.Mine -> "Tu n'as pas encore de recette."
-                                    RecipeFilter.Favorites -> "Aucune recette en favori pour l'instant."
-                                    RecipeFilter.All -> "Aucune recette pour l'instant."
-                                },
-                                color = TextMuted,
-                                fontSize = 15.sp,
-                            )
-                        }
-                    } else {
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(2),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            contentPadding = PaddingValues(top = 14.dp, bottom = 16.dp),
-                            modifier = Modifier.fillMaxSize(),
-                        ) {
-                            items(items = s.recipes, key = { it.id }) { recipe ->
-                                val isFavorite = recipe.id in s.favoriteIds
-                                RecipeCard(
-                                    recipe = recipe,
-                                    isFavorite = isFavorite,
-                                    onClick = { onOpenRecipe(recipe, isFavorite) },
+                    is RecipesUiState.Success -> {
+                        if (s.recipes.isEmpty()) {
+                            CenteredBox {
+                                Text(
+                                    when (s.filter) {
+                                        RecipeFilter.Mine -> "Tu n'as pas encore de recette."
+                                        RecipeFilter.Favorites -> "Aucune recette en favori pour l'instant."
+                                        RecipeFilter.All -> "Aucune recette pour l'instant."
+                                    },
+                                    color = TextMuted,
+                                    fontSize = 15.sp,
                                 )
+                            }
+                        } else {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                contentPadding = PaddingValues(top = 14.dp, bottom = 16.dp),
+                                modifier = Modifier.fillMaxSize(),
+                            ) {
+                                items(items = s.recipes, key = { it.id }) { recipe ->
+                                    val isFavorite = recipe.id in s.favoriteIds
+                                    RecipeCard(
+                                        recipe = recipe,
+                                        isFavorite = isFavorite,
+                                        onClick = { onOpenRecipe(recipe, isFavorite) },
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
+        }
+
+        // Création de recette (même patron que le « + » du fil, avant refactoring).
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(20.dp)
+                .size(56.dp)
+                .background(Primary, CircleShape)
+                .clickable(onClick = onCreateRecipe),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("+", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Bold)
         }
     }
 }

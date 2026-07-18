@@ -27,12 +27,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.spera.models.Recipe
+import com.example.spera.models.Training
 import com.example.spera.models.User
 import com.example.spera.ui.screens.home.HomeScreen
 import com.example.spera.ui.screens.newpost.NewPostScreen
 import com.example.spera.ui.screens.profile.ProfileScreen
 import com.example.spera.ui.screens.recipes.RecipeDetailScreen
 import com.example.spera.ui.screens.recipes.RecipesScreen
+import com.example.spera.ui.screens.training.TrainingDetailScreen
 import com.example.spera.ui.screens.training.TrainingScreen
 
 // Palette auth de référence (CLAUDE.md)
@@ -69,6 +71,32 @@ fun MainScaffold(
     // Incrémenté à chaque publication pour recharger le fil au retour.
     var feedRefresh by rememberSaveable { mutableStateOf(0) }
 
+    // US9 — détail d'une recette en plein écran (sans header/footer), comme le
+    // suggère la flèche retour de la maquette 9. (recette, est favorite)
+    var openedRecipe by remember { mutableStateOf<Pair<Recipe, Boolean>?>(null) }
+
+    // US12 — détail d'une séance en plein écran, même patron que le détail recette.
+    var openedTraining by remember { mutableStateOf<Training?>(null) }
+
+    val opened = openedRecipe
+    if (opened != null) {
+        RecipeDetailScreen(
+            recipe = opened.first,
+            isFavorite = opened.second,
+            onBack = { openedRecipe = null },
+        )
+        return
+    }
+
+    val trainingDetail = openedTraining
+    if (trainingDetail != null) {
+        TrainingDetailScreen(
+            training = trainingDetail,
+            onBack = { openedTraining = null },
+        )
+        return
+    }
+
     if (showNewPost) {
         NewPostScreen(
             onBack = { showNewPost = false },
@@ -93,8 +121,12 @@ fun MainScaffold(
                     refreshSignal = feedRefresh,
                     onCreatePost = { showNewPost = true },
                 )
-                MainTab.Recipes -> RecipesScreen()
-                MainTab.Training -> TrainingScreen()
+                MainTab.Recipes -> RecipesScreen(
+                    onOpenRecipe = { recipe, isFavorite -> openedRecipe = recipe to isFavorite },
+                )
+                MainTab.Training -> TrainingScreen(
+                    onOpenTraining = { openedTraining = it },
+                )
                 MainTab.Profile -> ProfileScreen(user = user, onLogout = onLogout)
             }
         }

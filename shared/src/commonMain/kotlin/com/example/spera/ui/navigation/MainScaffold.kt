@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -25,10 +26,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.spera.models.Recipe
 import com.example.spera.models.User
 import com.example.spera.ui.screens.home.HomeScreen
 import com.example.spera.ui.screens.newpost.NewPostScreen
 import com.example.spera.ui.screens.profile.ProfileScreen
+import com.example.spera.ui.screens.recipes.RecipeDetailScreen
 import com.example.spera.ui.screens.recipes.RecipesScreen
 import com.example.spera.ui.screens.training.TrainingScreen
 

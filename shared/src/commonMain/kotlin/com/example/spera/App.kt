@@ -1,48 +1,53 @@
 package com.example.spera
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import MyAppTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
-import org.jetbrains.compose.resources.painterResource
+import com.example.spera.data.auth.AuthProvider
+import com.example.spera.ui.navigation.MainScaffold
+import com.example.spera.ui.screens.login.LoginScreen
+import com.example.spera.ui.screens.signup.SignUpScreen
+import com.example.spera.ui.screens.welcome.WelcomeScreen
 
-import spera.shared.generated.resources.Res
-import spera.shared.generated.resources.compose_multiplatform
+private enum class AuthScreen { Welcome, Login, SignUp }
 
 @Composable
 @Preview
 fun App() {
-    MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
+    MyAppTheme {
+        // Le maintien de session pilote la navigation (US2).
+        val currentUser by AuthProvider.sessionManager.currentUser.collectAsState()
+
+        val user = currentUser
+        if (user != null) {
+            // Coque authentifiée : header + footer communs à toutes les sections.
+            MainScaffold(
+                user = user,
+                onLogout = { AuthProvider.sessionManager.clear() },
+            )
+        } else {
+            // Flux d'authentification : accueil -> connexion (US2) / création (US1).
+            var screen by remember { mutableStateOf(AuthScreen.Welcome) }
+            when (screen) {
+                AuthScreen.Welcome -> WelcomeScreen(
+                    onCreateAccount = { screen = AuthScreen.SignUp },
+                    onLogin = { screen = AuthScreen.Login },
+                )
+
+                AuthScreen.Login -> LoginScreen(
+                    onNavigateToSignUp = { screen = AuthScreen.SignUp },
+                    onNavigateBack = { screen = AuthScreen.Welcome },
+                )
+
+                AuthScreen.SignUp -> SignUpScreen(
+                    onNavigateToLogin = { screen = AuthScreen.Login },
+                    onNavigateBack = { screen = AuthScreen.Welcome },
+                )
             }
         }
     }

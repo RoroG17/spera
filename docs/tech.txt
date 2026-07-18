@@ -1,0 +1,11 @@
+# Technologie
+
+BD : PostgreSQL
+
+Backend : Supabase
+
+Frontend : JetBrain Compose multiplateforme 
+
+Map : MapLibre
+
+Reconnaissance vocale : Porcupine

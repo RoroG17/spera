@@ -34,6 +34,7 @@ import com.example.spera.ui.screens.newpost.NewPostScreen
 import com.example.spera.ui.screens.profile.ProfileScreen
 import com.example.spera.ui.screens.recipes.RecipeDetailScreen
 import com.example.spera.ui.screens.recipes.RecipesScreen
+import com.example.spera.ui.screens.training.TimerScreen
 import com.example.spera.ui.screens.training.TrainingDetailScreen
 import com.example.spera.ui.screens.training.TrainingScreen
 
@@ -70,6 +71,11 @@ fun MainScaffold(
     var showNewPost by rememberSaveable { mutableStateOf(false) }
     // Incrémenté à chaque publication pour recharger le fil au retour.
     var feedRefresh by rememberSaveable { mutableStateOf(0) }
+
+    // US14 — flux timer (création de séance) en plein écran.
+    var showTimer by rememberSaveable { mutableStateOf(false) }
+    // Incrémenté quand une séance timer est enregistrée, pour recharger le calendrier.
+    var trainingRefresh by rememberSaveable { mutableStateOf(0) }
 
     // US9 — détail d'une recette en plein écran (sans header/footer), comme le
     // suggère la flèche retour de la maquette 9. (recette, est favorite)
@@ -108,6 +114,17 @@ fun MainScaffold(
         return
     }
 
+    if (showTimer) {
+        TimerScreen(
+            onBack = { showTimer = false },
+            onSaved = {
+                showTimer = false
+                trainingRefresh += 1
+            },
+        )
+        return
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -125,6 +142,8 @@ fun MainScaffold(
                     onOpenRecipe = { recipe, isFavorite -> openedRecipe = recipe to isFavorite },
                 )
                 MainTab.Training -> TrainingScreen(
+                    refreshSignal = trainingRefresh,
+                    onCreateTraining = { showTimer = true },
                     onOpenTraining = { openedTraining = it },
                 )
                 MainTab.Profile -> ProfileScreen(user = user, onLogout = onLogout)

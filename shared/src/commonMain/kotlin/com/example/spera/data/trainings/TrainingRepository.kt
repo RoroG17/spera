@@ -15,8 +15,13 @@ sealed interface TrainingsResult {
 interface TrainingRepository {
     /**
      * Renvoie les séances de [user] (liste `trainings` de `data.txt`), triées
-     * de la plus récente à la plus ancienne. Le groupement par semaine
-     * s'applique côté ViewModel.
+     * de la plus récente à la plus ancienne.
      */
     suspend fun loadTrainings(user: User): TrainingsResult
+
+    /**
+     * Ajoute [training] au calendrier de [user] (US14 : séance créée depuis
+     * le timer) et renvoie la liste mise à jour.
+     */
+    suspend fun saveTraining(user: User, training: Training): TrainingsResult
 }

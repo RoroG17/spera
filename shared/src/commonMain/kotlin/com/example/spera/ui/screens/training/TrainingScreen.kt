@@ -21,6 +21,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -50,83 +51,110 @@ private val TextMuted = Color(0xFF9A93A8)
 private val WEEKDAY_LABELS = listOf("Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim")
 
 /**
- * Onglet Entraînement (US12) : calendrier mensuel avec les jours de séance
- * marqués, et liste des séances en dessous — taper un jour marqué filtre la
- * liste, taper une séance ouvre son détail. Le header et le footer sont
- * fournis par `MainScaffold`.
+ * Onglet Entraînement (US12/US14) : bouton de création de séance timer,
+ * calendrier mensuel avec les jours de séance marqués, et liste des séances
+ * en dessous — taper un jour marqué filtre la liste, taper une séance ouvre
+ * son détail. Le header et le footer sont fournis par `MainScaffold`.
+ *
+ * [refreshSignal] : recharge le calendrier quand la valeur change (retour du
+ * timer US14). [onCreateTraining] : ouvre le flux timer.
  */
 @Composable
 fun TrainingScreen(
+    refreshSignal: Int = 0,
+    onCreateTraining: () -> Unit = {},
     onOpenTraining: (Training) -> Unit = {},
     viewModel: TrainingsVM = viewModel { TrainingsVM() },
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    Column(
+    LaunchedEffect(refreshSignal) {
+        if (refreshSignal > 0) viewModel.load()
+    }
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Background)
-            .padding(horizontal = 16.dp),
+            .background(Background),
     ) {
-        when (val s = state) {
-            is TrainingsUiState.Loading -> CenteredBox {
-                CircularProgressIndicator(color = Primary)
-            }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+        ) {
+            when (val s = state) {
+                is TrainingsUiState.Loading -> CenteredBox {
+                    CircularProgressIndicator(color = Primary)
+                }
 
-            is TrainingsUiState.Error -> CenteredBox {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(s.message, color = TextMuted, fontSize = 15.sp)
-                    TextButton(onClick = viewModel::load) {
-                        Text("Réessayer", color = Primary, fontWeight = FontWeight.SemiBold)
+                is TrainingsUiState.Error -> CenteredBox {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(s.message, color = TextMuted, fontSize = 15.sp)
+                        TextButton(onClick = viewModel::load) {
+                            Text("Réessayer", color = Primary, fontWeight = FontWeight.SemiBold)
+                        }
                     }
                 }
-            }
 
-            is TrainingsUiState.Success -> {
-                MonthCalendar(
-                    month = s.month,
-                    onPreviousMonth = viewModel::onPreviousMonth,
-                    onNextMonth = viewModel::onNextMonth,
-                    onDaySelect = viewModel::onDaySelect,
-                    modifier = Modifier.padding(top = 14.dp),
-                )
-
-                val selectedDay = s.month.selectedDay
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                ) {
-                    Text(
-                        if (selectedDay != null) "Séances du jour" else "Toutes les séances",
-                        color = TextPrimary,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f),
+                is TrainingsUiState.Success -> {
+                    MonthCalendar(
+                        month = s.month,
+                        onPreviousMonth = viewModel::onPreviousMonth,
+                        onNextMonth = viewModel::onNextMonth,
+                        onDaySelect = viewModel::onDaySelect,
+                        modifier = Modifier.padding(top = 14.dp),
                     )
-                    if (selectedDay != null) {
-                        TextButton(onClick = { viewModel.onDaySelect(selectedDay) }) {
-                            Text("Tout afficher", color = Primary, fontSize = 13.sp)
-                        }
-                    }
-                }
 
-                if (s.trainings.isEmpty()) {
-                    CenteredBox {
+                    val selectedDay = s.month.selectedDay
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                    ) {
                         Text(
-                            "Aucune séance pour l'instant.",
-                            color = TextMuted,
-                            fontSize = 15.sp,
+                            if (selectedDay != null) "Séances du jour" else "Toutes les séances",
+                            color = TextPrimary,
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f),
                         )
-                    }
-                } else {
-                    LazyColumn(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                        items(items = s.trainings, key = { it.id }) { training ->
-                            TrainingRow(training, onClick = { onOpenTraining(training) })
+                        if (selectedDay != null) {
+                            TextButton(onClick = { viewModel.onDaySelect(selectedDay) }) {
+                                Text("Tout afficher", color = Primary, fontSize = 13.sp)
+                            }
                         }
-                        item { Box(modifier = Modifier.padding(bottom = 16.dp)) }
+                    }
+
+                    if (s.trainings.isEmpty()) {
+                        CenteredBox {
+                            Text(
+                                "Aucune séance pour l'instant.",
+                                color = TextMuted,
+                                fontSize = 15.sp,
+                            )
+                        }
+                    } else {
+                        LazyColumn(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                            items(items = s.trainings, key = { it.id }) { training ->
+                                TrainingRow(training, onClick = { onOpenTraining(training) })
+                            }
+                            item { Box(modifier = Modifier.padding(bottom = 16.dp)) }
+                        }
                     }
                 }
             }
+        }
+
+        // US14 — création d'une séance timer (même patron que le « + » du fil).
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(20.dp)
+                .size(56.dp)
+                .background(Primary, CircleShape)
+                .clickable(onClick = onCreateTraining),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("+", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Bold)
         }
     }
 }

@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -25,9 +26,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.spera.models.Recipe
 import com.example.spera.models.User
 import com.example.spera.ui.screens.home.HomeScreen
 import com.example.spera.ui.screens.profile.ProfileScreen
+import com.example.spera.ui.screens.recipes.RecipeDetailScreen
 import com.example.spera.ui.screens.recipes.RecipesScreen
 import com.example.spera.ui.screens.training.TrainingScreen
 
@@ -59,6 +62,20 @@ fun MainScaffold(
     var tabIndex by rememberSaveable { mutableStateOf(0) }
     val tab = MainTab.entries[tabIndex]
 
+    // US9 — détail d'une recette en plein écran (sans header/footer), comme le
+    // suggère la flèche retour de la maquette 9. (recette, est favorite)
+    var openedRecipe by remember { mutableStateOf<Pair<Recipe, Boolean>?>(null) }
+
+    val opened = openedRecipe
+    if (opened != null) {
+        RecipeDetailScreen(
+            recipe = opened.first,
+            isFavorite = opened.second,
+            onBack = { openedRecipe = null },
+        )
+        return
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -69,7 +86,9 @@ fun MainScaffold(
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             when (tab) {
                 MainTab.Feed -> HomeScreen()
-                MainTab.Recipes -> RecipesScreen()
+                MainTab.Recipes -> RecipesScreen(
+                    onOpenRecipe = { recipe, isFavorite -> openedRecipe = recipe to isFavorite },
+                )
                 MainTab.Training -> TrainingScreen()
                 MainTab.Profile -> ProfileScreen(user = user, onLogout = onLogout)
             }
